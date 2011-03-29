@@ -121,8 +121,7 @@ def Album(sender, path):
       newUrl = url.replace('/2/', replacement)
     if len(newUrl) > 0:
       photoUrl = HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@id="media"]/div//img')[0].get('src').replace(' ','%20')
-      summary = ''
-      if HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@class="media_details InSkinHide"]/h1/span'):
-        summary = HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@class="media_details InSkinHide"]/p')[0].text.strip()
+      try: summary = HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@class="media_details InSkinHide"]/p')[0].text_content().strip()
+      except: summary = ''
       dir.Append(PhotoItem(photoUrl, title=None, summary=summary))
   return dir
