@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<site site="http://c.brightcove.com" plugin="http://admin.brightcove.com/.*"
-	initialState="playing" version="1.0">
+<site site="http://c.brightcove.com"
+	plugin="http://admin.brightcove.com/.*"
+	initialState="playing"
+	version="2.0">
 
 	<crop x="4" y="4" width="-7" height="-53" />
 
@@ -40,5 +42,3 @@
 		</event>
 	</state>
 </site>
-
-
