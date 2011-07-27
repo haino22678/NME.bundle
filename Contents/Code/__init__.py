@@ -34,32 +34,50 @@ def MainMenuVideo():
 
 ####################################################################################################
 def AppendVideos(dir, url):
-  for item in HTML.ElementFromURL(url, errors='ignore').xpath('//div[@id="content"]/div[@class="main_block"]/div//img'):
-    title = item.get('alt')
-    thumb = item.get('src')
-    videoPath = item.xpath('./../../a')[0].get('href')
 
-    # This approach extracts data from destination page which is slow but worth it for the extra meta-data obtained.
-    videoPageUrl = HTML.ElementFromURL(BASE_URL % videoPath, errors='ignore', cacheTime=CACHE_1WEEK) # We can cache detail pages longer
-    summary = videoPageUrl.xpath('//div[@class="media_details"]/p')[0].text.strip()
-    durationText = videoPageUrl.xpath('//p[@class="time"]')[0].text.strip()
-    duration = durationText[1+durationText.find(':'):].strip()
-    mins = duration[:duration.find(":")]
-    secs = duration[1+duration.find(":"):]
-    milsecs = 1000*(int(secs) + 60*int(mins))
+  resultsDict = {}
 
-    bgcolor = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="bgcolor"]')[0].get('value')
-    bgcolor = bgcolor.replace('#', '%23')
-    width = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="width"]')[0].get('value')
-    height = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="height"]')[0].get('value')
-    playerId = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="playerID"]')[0].get('value')
-    publisherId = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="publisherID"]')[0].get('value')
-    videoPlayer = videoPageUrl.xpath('//div[@class="media_container"]//object/param[@name="@videoPlayer"]')[0].get('value')
-    flashUrl = FLASH_URL % (width, height, bgcolor, playerId, publisherId, "@videoPlayer="+videoPlayer)
-    dir.Append(WebVideoItem(flashUrl, title=title, summary=summary, thumb=thumb, duration=milsecs))
+  @parallelize
+  def GetVideos():
+    content = HTML.ElementFromURL(url, errors='ignore')
+    videos = content.xpath('//div[@id="content"]/div[@class="main_block"]/div//img')
 
-  if HTML.ElementFromURL(url, errors='ignore').xpath('//a[contains(@title,"Next Page")]'):
-    nextUrl = HTML.ElementFromURL(url, errors='ignore').xpath('//a[contains(@title,"Next Page")]')[0].get('href')
+    for num in range(len(videos)):
+      video = videos[num]
+
+      @task
+      def GetVideo(num=num, resultsDict=resultsDict, video=video):
+        title = video.get('alt')
+        thumb = video.get('src')
+
+        videoPath = video.xpath('./../..//a')[0].get('href')
+        videoPage = HTML.ElementFromURL(BASE_URL % videoPath, errors='ignore', cacheTime=CACHE_1WEEK)
+        summary = videoPage.xpath('//div[@class="media_details"]/p')[0].text.strip()
+        durationText = videoPage.xpath('//p[@class="time"]')[0].text.strip()
+        duration = durationText[1+durationText.find(':'):].strip()
+        mins = duration[:duration.find(":")]
+        secs = duration[1+duration.find(":"):]
+        milsecs = 1000*(int(secs) + 60*int(mins))
+
+        bgcolor = videoPage.xpath('//div[@class="media_container"]//object/param[@name="bgcolor"]')[0].get('value')
+        bgcolor = bgcolor.replace('#', '%23')
+        width = videoPage.xpath('//div[@class="media_container"]//object/param[@name="width"]')[0].get('value')
+        height = videoPage.xpath('//div[@class="media_container"]//object/param[@name="height"]')[0].get('value')
+        playerId = videoPage.xpath('//div[@class="media_container"]//object/param[@name="playerID"]')[0].get('value')
+        publisherId = videoPage.xpath('//div[@class="media_container"]//object/param[@name="publisherID"]')[0].get('value')
+        videoPlayer = videoPage.xpath('//div[@class="media_container"]//object/param[@name="@videoPlayer"]')[0].get('value')
+        flashUrl = FLASH_URL % (width, height, bgcolor, playerId, publisherId, "@videoPlayer="+videoPlayer)
+
+        resultsDict[num] = WebVideoItem(flashUrl, title=title, summary=summary, thumb=thumb, duration=milsecs)
+
+  keys = resultsDict.keys()
+  keys.sort()
+  for key in keys:
+    dir.Append(resultsDict[key])
+
+  content_page = HTML.ElementFromURL(url, errors='ignore')
+  if content_page.xpath('//a[contains(@title,"Next Page")]'):
+    nextUrl = content_page.xpath('//a[contains(@title,"Next Page")]')[0].get('href')
     dir.Append(Function(DirectoryItem(Videos, title="More Videos ..."), path=nextUrl))
 
   return dir
