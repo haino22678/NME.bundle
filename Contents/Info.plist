@@ -36,5 +36,10 @@
 	<array>
 		<string>H.264</string>
 	</array>
+	<key>PlexSearchServices</key>
+	<dict>
+	   <key>NME</key>
+	   <string>com.plexapp.search.nme</string>
+	</dict>
 </dict>
 </plist>
