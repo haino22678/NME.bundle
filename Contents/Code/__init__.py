@@ -138,8 +138,10 @@ def Album(sender, path):
     elif url.find('/2/') > -1:
       newUrl = url.replace('/2/', replacement)
     if len(newUrl) > 0:
-      photoUrl = HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@id="media"]/div//img')[0].get('src').replace(' ','%20')
+      photoPage = HTML.ElementFromURL(newUrl, errors='ignore')
+      photoUrl = photoPage.xpath('//div[@id="media"]/div//img')[0].get('src').replace(' ','%20')
+      photoTitle = photoPage.xpath('//meta[@property="og:title"]')[0].get('content')
       try: summary = HTML.ElementFromURL(newUrl, errors='ignore').xpath('//div[@class="media_details InSkinHide"]/p')[0].text_content().strip()
       except: summary = ''
-      dir.Append(PhotoItem(photoUrl, title=None, summary=summary))
+      dir.Append(PhotoItem(photoUrl, title = photoTitle, summary = summary))
   return dir
