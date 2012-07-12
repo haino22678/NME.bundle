@@ -51,24 +51,12 @@ def AppendVideos(dir, url):
         thumb = video.get('src')
 
         videoPath = video.xpath('./../..//a')[0].get('href')
-        videoPage = HTML.ElementFromURL(BASE_URL % videoPath, errors='ignore', cacheTime=CACHE_1WEEK)
+        videoPage = HTML.ElementFromURL(BASE_URL % videoPath, cacheTime=CACHE_1WEEK)
         summary = videoPage.xpath('//div[@class="media_details"]/p')[0].text.strip()
-        durationText = videoPage.xpath('//p[@class="time"]')[0].text.strip()
-        duration = durationText[1+durationText.find(':'):].strip()
-        mins = duration[:duration.find(":")]
-        secs = duration[1+duration.find(":"):]
-        milsecs = 1000*(int(secs) + 60*int(mins))
+        flashUrl = videoPage.xpath('//meta[@property="og:video"]')[0].get('content')
+        flashUrl = '%s&%s' % (flashUrl, 'autoStart=true')
 
-        bgcolor = videoPage.xpath('//div[@class="media_container"]//object/param[@name="bgcolor"]')[0].get('value')
-        bgcolor = bgcolor.replace('#', '%23')
-        width = videoPage.xpath('//div[@class="media_container"]//object/param[@name="width"]')[0].get('value')
-        height = videoPage.xpath('//div[@class="media_container"]//object/param[@name="height"]')[0].get('value')
-        playerId = videoPage.xpath('//div[@class="media_container"]//object/param[@name="playerID"]')[0].get('value')
-        publisherId = videoPage.xpath('//div[@class="media_container"]//object/param[@name="publisherID"]')[0].get('value')
-        videoPlayer = videoPage.xpath('//div[@class="media_container"]//object/param[@name="@videoPlayer"]')[0].get('value')
-        flashUrl = FLASH_URL % (width, height, bgcolor, playerId, publisherId, "@videoPlayer="+videoPlayer)
-
-        resultsDict[num] = WebVideoItem(flashUrl, title=title, summary=summary, thumb=thumb, duration=milsecs)
+        resultsDict[num] = WebVideoItem(flashUrl, title=title, summary=summary, thumb=thumb)
 
   keys = resultsDict.keys()
   keys.sort()
