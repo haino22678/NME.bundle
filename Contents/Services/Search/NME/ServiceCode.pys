@@ -1,5 +1,3 @@
-import re
-
 BASE_URL = "http://www.nme.com"
 SEARCH_URL = 'http://www.nme.com/nme-video/search/%s'
 
@@ -9,7 +7,7 @@ def Search(query):
   url = SEARCH_URL % String.Quote(query)
   search_page = HTML.ElementFromURL(url)
   search_results = search_page.xpath("//div[@class='main_block']//div[@class='gallery_small']")
-  
+
   # Create a container to hold the results
   c = ObjectContainer()
   for item in search_results:
@@ -30,5 +28,5 @@ def Search(query):
 
     except:
       Log.Exception("Exception adding video result")
-      
+
   return c
