@@ -1,6 +1,3 @@
-VIDEO_PREFIX = '/video/nme'
-PHOTO_PREFIX = '/photos/nme'
-
 BASE_URL = 'http://www.nme.com%s'
 PHOTOS_URL = BASE_URL % '/photos'
 VIDEO_URL = BASE_URL % '/nme-video'
@@ -12,27 +9,25 @@ TITLE = 'NME'
 
 ####################################################################################################
 def Start():
-  Plugin.AddPrefixHandler(VIDEO_PREFIX, MainMenuVideo, TITLE, ICON, ART)
-  Plugin.AddPrefixHandler(PHOTO_PREFIX, MainMenuPictures, TITLE, ICON, ART)
 
   Plugin.AddViewGroup('Details', viewMode='InfoList', mediaType='items')
   Plugin.AddViewGroup('Pictures', viewMode='Pictures', mediaType='photos')
-  Plugin.AddViewGroup('ImageStream', viewMode='ImageStream', mediaType='photos')
 
   ObjectContainer.art = R(ART)
   ObjectContainer.title1 = TITLE
 
-  DirectoryObject.art = R(ART)
   DirectoryObject.thumb = R(ICON)
+  NextPageObject.thumb = R(ICON)
 
-  VideoClipObject.art = R(ART)
   VideoClipObject.thumb = R(ICON)
 
   HTTP.CacheTime = CACHE_1HOUR
-  HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_7; en-us) AppleWebKit/533.20.25 (KHTML, like Gecko) Version/5.0.4 Safari/533.20.27'
+  HTTP.Headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/536.26.14 (KHTML, like Gecko) Version/6.0.1 Safari/536.26.14'
 
 ####################################################################################################
+@handler('/video/nme', TITLE, art = ART, thumb = ICON)
 def MainMenuVideo(page_number = 1):
+
   oc = ObjectContainer(view_group = 'Details')
 
   url = 'http://www.nme.com/nme-video/search/NME/page/%d' % page_number
@@ -43,24 +38,28 @@ def MainMenuVideo(page_number = 1):
     thumb = item.xpath('.//img')[0].get('src')
 
     url = item.xpath('.//h3/a')[0].get('href')
-    if url.startswith('http://') == False:
+    if not url.startswith('http://'):
       url = BASE_URL % url
 
     oc.add(VideoClipObject(
       url = url,
       title = title,
-      thumb = thumb))
+      thumb = thumb
+    ))
 
   # Paging...
   if page.xpath('//a[contains(@title,"Go To The Next Page")]'):
-    oc.add(DirectoryObject(
+    oc.add(NextPageObject(
       key = Callback(MainMenuVideo, page_number = page_number + 1),
-      title = "Next..."))
+      title = "Next..."
+    ))
 
   return oc
 
 ####################################################################################################
+@handler('/photos/nme', TITLE, art = ART, thumb = ICON)
 def MainMenuPictures(offset = 0):
+
   oc = ObjectContainer(view_group = 'Pictures')
 
   url = 'http://www.nme.com/photos/offset/%d' % offset
@@ -71,18 +70,20 @@ def MainMenuPictures(offset = 0):
     thumb = item.xpath('.//img')[0].get('src').replace(' ','%20')
 
     url = item.xpath('.//h3/a')[0].get('href')
-    if url.startswith('http://') == False:
+    if not url.startswith('http://'):
       url = BASE_URL % url
 
     oc.add(PhotoAlbumObject(
       url = url,
       title = title,
-      thumb = thumb))
+      thumb = thumb
+    ))
 
   # Paging...
   if page.xpath('//ul[@class="prev_next"]/li[@class="next"]/a'):
-    oc.add(DirectoryObject(
+    oc.add(NextPageObject(
       key = Callback(MainMenuPictures, offset = offset + len(oc)),
-      title = "Next..."))
+      title = "Next..."
+    ))
 
   return oc
