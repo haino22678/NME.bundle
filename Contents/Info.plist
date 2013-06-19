@@ -15,9 +15,5 @@
 	<string>*</string>
 	<key>PlexFrameworkVersion</key>
 	<string>2</string>
-	<key>PlexMediaContainer</key>
-	<array>
-		<string>Flash</string>
-	</array>
 </dict>
 </plist>
